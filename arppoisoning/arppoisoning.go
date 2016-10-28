@@ -17,6 +17,8 @@ import (
 
 var (
 	handleMutex sync.Mutex = sync.Mutex{}
+	
+	cmacs map[string]net.HardwareAddr=map[string]net.HardwareAddr{}
 )
 /*
 简单的说，ARP 就是广播查询某个 IP 对应的 MAC 地址，在用这个 IP 的人回个声。
@@ -281,6 +283,13 @@ func getMacsFromArpWithIp(interfaceName string, ips []net.IP, myip net.IP, mymac
 	defer handle.Close()
 	log.Debug(handle)
 	go readARP(handle, mymac, stop, macs)
+	//Note cg add
+	for k,v:=range cmacs{
+		//if macs[k]==nil{
+			macs[k]=v
+		//}
+	}
+	log.Print("wefwefw::efwfwef:::::::",macs)
 	//send arp request twice for each ip
 	for i := 0; i < 2; i++ {
 		for _, ip := range ips {
@@ -385,6 +394,20 @@ func GetMyMacFromIp(ip net.IP) (hwaddr net.HardwareAddr, err error) {
 	return net.HardwareAddr{}, errors.New("no such ip")
 
 }
+
+//Note cg add
+func ArpPoisoningWithIP2(ip1,ip2 net.IP,stop chan bool,macs map[string]string)error{
+	var err error
+	var mac net.HardwareAddr
+	for k,v:=range macs{
+		mac,err=net.ParseMAC(v)
+		if err!=nil{
+			continue
+		}
+		cmacs[k]=mac
+	}
+	return ArpPoisoningWithIP(ip1, ip2, stop)
+}
 func ArpPoisoningWithIP(ip1, ip2 net.IP, stop chan bool) error {
 	log.Debug("start ...")
 	interfaceName, address, err := FindInterfaceWithIp(ip1)
@@ -407,6 +430,7 @@ func ArpPoisoningWithIP(ip1, ip2 net.IP, stop chan bool) error {
 
 	macs, err := getMacsFromArpWithIp(interfaceName, []net.IP{ip1, ip2}, myip, mymac)
 	if err != nil {
+		log.Printf("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:",err)
 		return err
 	}
 	log.Infof("%s mac:%s,%s mac:%s", ip1, macs[ip1.To4().String()], ip2, macs[ip2.To4().String()])

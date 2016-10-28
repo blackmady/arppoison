@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/nkbai/arppoison/arppoisoning"
+	"github.com/blackmady/arppoison/arppoisoning"
 	"net"
 	"time"
 	"github.com/gotips/log"
